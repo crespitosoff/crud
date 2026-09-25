@@ -23,3 +23,11 @@ Ahora que la estructura incluye las vistas y el archivo SQL, ¿te gustaría que 
 * El contenido inicial del archivo .github/copilot-instructions.md para que quede guardado en tu proyecto?
 
 
+
+
+
+```
+$base = "\\wsl$\Ubuntu\opt\lampp\htdocs\crud"
+New-Item -Path "$base\.github", "$base\app\config", "$base\app\models", "$base\app\controllers", "$base\app\ajax", "$base\app\views", "$base\app\assets\js" -ItemType Directory -Force
+New-Item -Path "$base\index.php", "$base\clinica.sql", "$base\.github\copilot-instructions.md", "$base\app\config\Conexion.php", "$base\app\models\PacienteModel.php", "$base\app\controllers\PacienteController.php", "$base\app\ajax\paciente_ajax.php", "$base\app\views\paciente_view.php", "$base\app\assets\js\main.js" -ItemType File -Force
+```
