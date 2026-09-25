@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Pacientes - Clínica</title>
+    <title>Gestión de Pacientes - Clínica</title>
 </head>
 <body>
     <main>
-        <h1>Registro de Pacientes</h1>
+        <h1>Gestión de Pacientes</h1>
 
-        <form id="formulario-paciente" method="POST" novalidate>
+        <form id="formulario-paciente" method="POST">
+            <input type="hidden" id="paciente-id" name="id">
+
             <fieldset>
                 <legend>Datos personales</legend>
 
@@ -30,7 +32,8 @@
                 <legend>Datos del documento</legend>
 
                 <label for="documento-identidad">Documento de identidad <span>*</span></label>
-                <input type="text" id="documento-identidad" name="documento_identidad" required>
+                <input type="text" id="documento-identidad" name="documento_identidad"
+                       minlength="10" maxlength="10" pattern="\d{10}" required>
 
                 <label for="fecha-nacimiento">Fecha de nacimiento <span>*</span></label>
                 <input type="date" id="fecha-nacimiento" name="fecha_nacimiento" required>
@@ -54,8 +57,28 @@
                 </select>
             </fieldset>
 
-            <button type="submit">Registrar paciente</button>
+            <button type="submit" id="boton-enviar">Registrar paciente</button>
+            <button type="button" id="boton-cancelar" hidden>Cancelar edición</button>
         </form>
+
+        <section>
+            <h2>Listado de pacientes</h2>
+
+            <table id="tabla-pacientes">
+                <thead>
+                    <tr>
+                        <th>Nombres</th>
+                        <th>Apellidos</th>
+                        <th>Documento</th>
+                        <th>Fecha de nacimiento</th>
+                        <th>Género</th>
+                        <th>Sede</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpo-pacientes"></tbody>
+            </table>
+        </section>
     </main>
 
     <script src="app/assets/js/main.js"></script>

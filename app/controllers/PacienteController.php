@@ -6,12 +6,13 @@ class PacienteController
 {
     public function registrar(array $post): array
     {
-        $datos = $this->sanitizar($post);
+        $datos      = $this->sanitizar($post);
+        $validacion = $this->validar($datos);
 
-        if ($this->validar($datos) === false) {
+        if ($validacion['valido'] === false) {
             return [
                 'exito'   => false,
-                'mensaje' => 'Todos los campos obligatorios deben estar completos',
+                'mensaje' => $validacion['mensaje'],
             ];
         }
 
@@ -54,12 +55,20 @@ class PacienteController
 
     public function actualizar(array $post): array
     {
-        $datos = $this->sanitizar($post);
+        $datos      = $this->sanitizar($post);
+        $validacion = $this->validar($datos);
 
-        if ($this->validar($datos) === false || $datos['id'] === '') {
+        if ($validacion['valido'] === false) {
             return [
                 'exito'   => false,
-                'mensaje' => 'Todos los campos obligatorios deben estar completos',
+                'mensaje' => $validacion['mensaje'],
+            ];
+        }
+
+        if ($datos['id'] === '') {
+            return [
+                'exito'   => false,
+                'mensaje' => 'Identificador de paciente no válido',
             ];
         }
 
@@ -112,25 +121,59 @@ class PacienteController
     private function sanitizar(array $post): array
     {
         return [
-            'id'                     => trim($post['id'] ?? ''),
-            'primer_nombre'          => trim($post['primer_nombre'] ?? ''),
-            'segundo_nombre'         => trim($post['segundo_nombre'] ?? ''),
-            'primer_apellido'        => trim($post['primer_apellido'] ?? ''),
-            'segundo_apellido'       => trim($post['segundo_apellido'] ?? ''),
-            'documento_identidad'    => trim($post['documento_identidad'] ?? ''),
-            'fecha_nacimiento'       => trim($post['fecha_nacimiento'] ?? ''),
-            'genero'                 => trim($post['genero'] ?? ''),
-            'sede_id'                => trim($post['sede_id'] ?? ''),
+            'id'                     => $this->limpiar($post['id'] ?? ''),
+            'primer_nombre'          => $this->limpiar($post['primer_nombre'] ?? ''),
+            'segundo_nombre'         => $this->limpiar($post['segundo_nombre'] ?? ''),
+            'primer_apellido'        => $this->limpiar($post['primer_apellido'] ?? ''),
+            'segundo_apellido'       => $this->limpiar($post['segundo_apellido'] ?? ''),
+            'documento_identidad'    => $this->limpiar($post['documento_identidad'] ?? ''),
+            'fecha_nacimiento'       => $this->limpiar($post['fecha_nacimiento'] ?? ''),
+            'genero'                 => $this->limpiar($post['genero'] ?? ''),
+            'sede_id'                => $this->limpiar($post['sede_id'] ?? ''),
         ];
     }
 
-    private function validar(array $datos): bool
+    private function limpiar(string $valor): string
     {
-        return $datos['primer_nombre']       !== ''
-            && $datos['primer_apellido']     !== ''
-            && $datos['documento_identidad'] !== ''
-            && $datos['fecha_nacimiento']    !== ''
-            && $datos['genero']              !== ''
-            && $datos['sede_id']             !== '';
+        return htmlspecialchars(trim($valor), ENT_QUOTES, 'UTF-8');
+    }
+
+    private function validar(array $datos): array
+    {
+        if ($datos['primer_nombre'] === '' || $datos['primer_apellido'] === '' || $datos['documento_identidad'] === ''
+            || $datos['fecha_nacimiento'] === '' || $datos['genero'] === '' || $datos['sede_id'] === '') {
+            return [
+                'valido'  => false,
+                'mensaje' => 'Todos los campos obligatorios deben estar completos',
+            ];
+        }
+
+        if (preg_match('/^\d{10}$/', $datos['documento_identidad']) !== 1) {
+            return [
+                'valido'  => false,
+                'mensaje' => 'El documento de identidad debe contener exactamente 10 números',
+            ];
+        }
+
+        $fechaNacimiento = DateTime::createFromFormat('Y-m-d', $datos['fecha_nacimiento']);
+
+        if ($fechaNacimiento === false) {
+            return [
+                'valido'  => false,
+                'mensaje' => 'La fecha de nacimiento no es válida',
+            ];
+        }
+
+        if ($fechaNacimiento > new DateTime('today')) {
+            return [
+                'valido'  => false,
+                'mensaje' => 'La fecha de nacimiento no puede ser posterior a la fecha actual',
+            ];
+        }
+
+        return [
+            'valido'  => true,
+            'mensaje' => '',
+        ];
     }
 }
