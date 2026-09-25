@@ -15,25 +15,33 @@ function establecerFechaMaxima() {
     fechaNacimiento.max = `${anio}-${mes}-${dia}`;
 }
 
+function mostrarSwal(icono, titulo, texto) {
+    Swal.fire({
+        icon  : icono,
+        title : titulo,
+        text  : texto,
+    });
+}
+
 function validarFormulario() {
     const campos = formularioPaciente.querySelectorAll('[required]');
 
     for (const campo of campos) {
         if (campo.value.trim() === '') {
-            alert('Todos los campos obligatorios deben estar completos');
+            mostrarSwal('warning', 'Campos incompletos', 'Todos los campos obligatorios deben estar completos');
 
             return false;
         }
     }
 
     if (/^\d{10}$/.test(documentoIdentidad.value) === false) {
-        alert('El documento de identidad debe contener exactamente 10 números');
+        mostrarSwal('warning', 'Documento inválido', 'El documento de identidad debe contener exactamente 10 números');
 
         return false;
     }
 
     if (fechaNacimiento.value !== '' && fechaNacimiento.value > fechaNacimiento.max) {
-        alert('La fecha de nacimiento no puede ser posterior a la fecha actual');
+        mostrarSwal('warning', 'Fecha inválida', 'La fecha de nacimiento no puede ser posterior a la fecha actual');
 
         return false;
     }
@@ -44,8 +52,8 @@ function validarFormulario() {
 function actualizarEstadoFormulario() {
     const esEdicion = campoId.value !== '';
 
-    botonEnviar.textContent   = esEdicion ? 'Actualizar paciente' : 'Registrar paciente';
-    botonCancelar.hidden      = esEdicion === false;
+    botonEnviar.textContent = esEdicion ? 'Actualizar paciente' : 'Registrar paciente';
+    botonCancelar.hidden    = esEdicion === false;
 }
 
 function cancelarEdicion() {
@@ -71,7 +79,7 @@ function enviarFormulario(evento) {
     })
         .then((respuesta) => respuesta.json())
         .then((respuesta) => {
-            alert(respuesta.mensaje);
+            mostrarSwal(respuesta.exito ? 'success' : 'error', respuesta.exito ? 'Correcto' : 'Error', respuesta.mensaje);
 
             if (respuesta.exito) {
                 campoId.value = '';
@@ -81,58 +89,69 @@ function enviarFormulario(evento) {
             }
         })
         .catch(() => {
-            alert('Ocurrió un error al guardar el paciente');
+            mostrarSwal('error', 'Error', 'Ocurrió un error al guardar el paciente');
         });
 }
 
-function editarPaciente(paciente) {
-    campoId.value                          = paciente.id;
-    formularioPaciente.primer_nombre.value = paciente.primer_nombre;
-    formularioPaciente.segundo_nombre.value = paciente.segundo_nombre || '';
+function cargarFormularioEdicion(paciente) {
+    campoId.value                            = paciente.id;
+    formularioPaciente.primer_nombre.value   = paciente.primer_nombre;
+    formularioPaciente.segundo_nombre.value  = paciente.segundo_nombre;
     formularioPaciente.primer_apellido.value = paciente.primer_apellido;
-    formularioPaciente.segundo_apellido.value = paciente.segundo_apellido || '';
-    documentoIdentidad.value                = paciente.documento_identidad;
-    fechaNacimiento.value                   = paciente.fecha_nacimiento;
-    formularioPaciente.genero.value         = paciente.genero;
-    formularioPaciente.sede_id.value        = paciente.sede_id;
+    formularioPaciente.segundo_apellido      = paciente.segundo_apellido;
+
+    documentoIdentidad.value         = paciente.documento_identidad;
+    fechaNacimiento.value            = paciente.fecha_nacimiento;
+    formularioPaciente.genero.value  = paciente.genero;
+    formularioPaciente.sede_id.value = paciente.sede_id;
 
     actualizarEstadoFormulario();
     formularioPaciente.scrollIntoView({ behavior : 'smooth' });
 }
 
 function eliminarPaciente(id) {
-    if (confirm('¿Está seguro de eliminar este paciente?') === false) {
-        return;
-    }
+    Swal.fire({
+        title              : '¿Eliminar paciente?',
+        text               : 'Esta acción no se puede deshacer',
+        icon               : 'warning',
+        showCancelButton   : true,
+        confirmButtonColor : '#d33',
+        confirmButtonText  : 'Sí, eliminar',
+        cancelButtonText   : 'Cancelar',
+    }).then((resultado) => {
+        if (resultado.isConfirmed === false) {
+            return;
+        }
 
-    const datos = new FormData();
+        const datos = new FormData();
 
-    datos.append('accion', 'eliminar');
-    datos.append('id', id);
+        datos.append('accion', 'eliminar');
+        datos.append('id', id);
 
-    fetch('app/ajax/paciente_ajax.php', {
-        method : 'POST',
-        body   : datos,
-    })
-        .then((respuesta) => respuesta.json())
-        .then((respuesta) => {
-            alert(respuesta.mensaje);
-
-            if (respuesta.exito) {
-                cargarPacientes();
-            }
+        fetch('app/ajax/paciente_ajax.php', {
+            method : 'POST',
+            body   : datos,
         })
-        .catch(() => {
-            alert('Ocurrió un error al eliminar el paciente');
-        });
+            .then((respuesta) => respuesta.json())
+            .then((respuesta) => {
+                mostrarSwal(respuesta.exito ? 'success' : 'error', respuesta.exito ? 'Correcto' : 'Error', respuesta.mensaje);
+
+                if (respuesta.exito) {
+                    cargarPacientes();
+                }
+            })
+            .catch(() => {
+                mostrarSwal('error', 'Error', 'Ocurrió un error al eliminar el paciente');
+            });
+    });
 }
 
 function crearFila(paciente) {
     const fila = document.createElement('tr');
 
     fila.innerHTML = `
-        <td>${paciente.primer_nombre} ${paciente.segundo_nombre || ''}</td>
-        <td>${paciente.primer_apellido} ${paciente.segundo_apellido || ''}</td>
+        <td>${paciente.primer_nombre} ${paciente.segundo_nombre}</td>
+        <td>${paciente.primer_apellido} ${paciente.segundo_apellido}</td>
         <td>${paciente.documento_identidad}</td>
         <td>${paciente.fecha_nacimiento}</td>
         <td>${paciente.genero}</td>
@@ -143,7 +162,7 @@ function crearFila(paciente) {
         </td>
     `;
 
-    fila.querySelector('.accion-editar').addEventListener('click', () => editarPaciente(paciente));
+    fila.querySelector('.accion-editar').addEventListener('click', () => cargarFormularioEdicion(paciente));
     fila.querySelector('.accion-eliminar').addEventListener('click', () => eliminarPaciente(paciente.id));
 
     return fila;
@@ -161,7 +180,7 @@ function cargarPacientes() {
         .then((respuesta) => respuesta.json())
         .then((respuesta) => {
             if (respuesta.exito === false) {
-                alert(respuesta.mensaje);
+                mostrarSwal('error', 'Error', respuesta.mensaje);
 
                 return;
             }
@@ -173,7 +192,7 @@ function cargarPacientes() {
             });
         })
         .catch(() => {
-            alert('Ocurrió un error al cargar los pacientes');
+            mostrarSwal('error', 'Error', 'Ocurrió un error al cargar los pacientes');
         });
 }
 

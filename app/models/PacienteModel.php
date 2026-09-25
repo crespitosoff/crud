@@ -40,7 +40,7 @@ class PacienteModel
         return $stmt->execute();
     }
 
-    public static function obtenerTodos(): array
+    public static function obtenerPacientes(): array
     {
         $sql = 'SELECT
                     p.id,
@@ -60,7 +60,12 @@ class PacienteModel
 
         $stmt->execute();
 
-        return $stmt->fetchAll();
+        return array_map(function (array $paciente): array {
+            $paciente['segundo_nombre']   = $paciente['segundo_nombre'] ?? '';
+            $paciente['segundo_apellido'] = $paciente['segundo_apellido'] ?? '';
+
+            return $paciente;
+        }, $stmt->fetchAll());
     }
 
     public static function actualizar(array $datos): bool

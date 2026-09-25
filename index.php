@@ -33,7 +33,8 @@
 
                 <label for="documento-identidad">Documento de identidad <span>*</span></label>
                 <input type="text" id="documento-identidad" name="documento_identidad"
-                       minlength="10" maxlength="10" pattern="\d{10}" required>
+                       minlength="10" maxlength="10" pattern="\d{10}" required
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)">
 
                 <label for="fecha-nacimiento">Fecha de nacimiento <span>*</span></label>
                 <input type="date" id="fecha-nacimiento" name="fecha_nacimiento" required>
@@ -81,6 +82,7 @@
         </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="app/assets/js/main.js"></script>
 </body>
 </html>

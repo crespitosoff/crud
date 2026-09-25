@@ -28,6 +28,13 @@ class PacienteController
                 'mensaje' => $exito ? 'Paciente registrado correctamente' : 'No se pudo registrar al paciente',
             ];
         } catch (PDOException $e) {
+            if ($e->getCode() === '23000') {
+                return [
+                    'exito'   => false,
+                    'mensaje' => 'Este documento ya se encuentra registrado en el sistema.',
+                ];
+            }
+
             return [
                 'exito'   => false,
                 'mensaje' => 'Error al registrar: ' . $e->getMessage(),
@@ -38,7 +45,7 @@ class PacienteController
     public function listar(array $post): array
     {
         try {
-            $pacientes = PacienteModel::obtenerTodos();
+            $pacientes = PacienteModel::obtenerPacientes();
 
             return [
                 'exito'     => true,
@@ -148,23 +155,14 @@ class PacienteController
             ];
         }
 
-        if (preg_match('/^\d{10}$/', $datos['documento_identidad']) !== 1) {
+        if (preg_match('/^[0-9]{10}$/', $datos['documento_identidad']) !== 1) {
             return [
                 'valido'  => false,
                 'mensaje' => 'El documento de identidad debe contener exactamente 10 números',
             ];
         }
 
-        $fechaNacimiento = DateTime::createFromFormat('Y-m-d', $datos['fecha_nacimiento']);
-
-        if ($fechaNacimiento === false) {
-            return [
-                'valido'  => false,
-                'mensaje' => 'La fecha de nacimiento no es válida',
-            ];
-        }
-
-        if ($fechaNacimiento > new DateTime('today')) {
+        if ($datos['fecha_nacimiento'] > date('Y-m-d')) {
             return [
                 'valido'  => false,
                 'mensaje' => 'La fecha de nacimiento no puede ser posterior a la fecha actual',
