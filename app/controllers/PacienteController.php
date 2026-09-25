@@ -125,6 +125,11 @@ class PacienteController
         }
     }
 
+    public function mostrarVista()
+    {
+        require_once __DIR__ . '/../views/paciente_view.php';
+    }
+
     private function sanitizar(array $post): array
     {
         return [
